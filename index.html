@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bio Project by joao and ana</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <style>
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+    body {
+      background: #09090b;
+      color: #e4e4e7;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: #3b82f6; color: #fff }
+
+    ::-webkit-scrollbar { width: 4px }
+    ::-webkit-scrollbar-track { background: #09090b }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46 }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      background: transparent;
+      height: 2px;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 3px;
+      background: rgba(255,255,255,.1);
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 12px;
+      width: 12px;
+      border-radius: 50%;
+      background: #e4e4e7;
+      margin-top: -4.5px;
+      transition: transform .15s, background .15s;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); background: #fff }
+    input[type=range]:focus { outline: none }
+
+    .toggle {
+      width: 32px;
+      height: 18px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+    .toggle.on { background: #3b82f6; border-color: #3b82f6 }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      background: #71717a;
+      border-radius: 50%;
+      transition: transform .2s cubic-bezier(.16,1,.3,1), background .2s;
+    }
+    .toggle.on::after { transform: translateX(14px); background: #fff }
+
+    .glass-panel {
+      background: rgba(24,24,27,.4);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,.05);
+      border-radius: 16px;
+    }
+
+    @keyframes mrna-pulse {
+      0%, 92%, 100% { opacity: 1; transform: none }
+      95%           { opacity: 0; transform: translateY(4px) scale(.95) }
+    }
+    .mrna-b {
+      display: inline-block;
+      animation: mrna-pulse 8s ease-in-out infinite;
+      will-change: opacity, transform;
+    }
+
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(5px) }
+      to   { opacity: 1; transform: none }
+    }
+    .fade-in-up { animation: fade-in-up .3s ease-out both }
+
+    /* Blueprint Section */
+    .bp-section {
+      background: #09090b;
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo, memo } = React;
+
+    const CENTRAL_DOGMA = `Protein production starts with transcription, in which RNA polymerase uses a DNA template to construct a complimentary pre-mRNA strand. Before the mature mRNA is transferred to the cytoplasm, it has to add a cap and tail and remove non-coding introns. Finally, there is translation by ribosomes reading the codons carried by mRNA and enabling tRNA to supply amino acids whose polypeptide chain is lengthened until a stop codon is detected.\nThis final assembly requires folding the finished protein into secondary structures, namely alpha-helices and beta sheets, forming functional tertiary structures for proper receptors such as MC1R.`;
+
+    const GLOSSARY = [
+      { term: "Base", def: "The 4 raw bit inputs (A, T, C, G) composing your source code." },
+      { term: "Gene", def: "A specific directory of code. MC1R determines the render settings for your skin/hair UI." },
+      { term: "Instructions", def: "The precise line-by-line logic that the compiler reads." },
+      { term: "Transcription", def: "Copy-pasting the master branch (DNA) into a temp script (mRNA) so prod doesn't break." },
+      { term: "RNA Polymerase (Copy Utility)", def: "The system tool that performs the actual copy-paste from DNA to mRNA." },
+      { term: "mRNA (The Deploy Build)", def: "A temporary script that carries the instructions from the secure server (DNA) to the compiler." },
+      { term: "Codon", def: "A 3-bit hex code that maps to exactly one physical material." },
+      { term: "Translation", def: "The compiler (Ribosome) executing the temp script to output compiled hardware (Protein)." },
+      { term: "tRNA (Delivery Drones)", def: "Transport units that fetch the raw materials (Amino Acids) that match the code." },
+      { term: "rRNA (Compiler Core)", def: "The physical infrastructure of the Ribosome; it's the OS that runs the assembly logic." },
+      { term: "Ribosome", def: "The main compiler engine. Crunches the input and assembles the hardware." },
+      { term: "Amino Acid (Raw Materials)", def: "Individual hardware components that, when chained, form a functional Protein." },
+      { term: "Protein", def: "Compiled hardware. The physical object doing the heavy lifting in prod." },
+      { term: "Trait", def: "Client Render / UI Output. What you actually see after compiling." },
+      { term: "Mutation", def: "A bug pushed to prod. Sometimes unnoticeable, sometimes crashes the entire system." }
+    ];
+
+    const DNA_TEMPLATE = "TACGGACTGACTTCCGAGTAGACAGAT".split("");
+    const COMPLEMENT = { T: 'A', A: 'U', C: 'G', G: 'C' };
+
+    const SLIDERS = [
+      { key: 'rnapActivity', label: 'Compiler CPU Health' },
+      { key: 'ribosomeConc', label: 'Available Compiler Threads' },
+      { key: 'trnaAvail',    label: 'tRNA Delivery Drones (RAM)' }
+    ];
+
+    const MUTATIONS = [
+      {
+        key: 'missense',
+        label: 'Source Code Typo (R151C)',
+        title: 'R151C Mutation',
+        lines: [
+          ['Status', 'Source Code Typo detected in MC1R gene.'],
+          ['Effect', 'The compiled receptor protein is non-functional (Runtime Error).'],
+          ['Result', 'System fails to render high-density melanin, reverting to a "Red Hair/Fair Skin" UI skin.']
+        ]
+      },
+      {
+        key: 'nonsense',
+        label: 'Early STOP Bug',
+        title: 'Early STOP Bug',
+        lines: [
+          ['Status', 'Unexpected EOF / Early STOP command hit.'],
+          ['Effect', 'The compiled hardware is fragmented and cleared by the garbage collector.'],
+          ['Result', '10% Output yield, resulting in severely weak UI (Truncated Build).']
+        ]
+      },
+      {
+        key: 'frameshift',
+        label: 'Index Shift Error',
+        title: 'Index Shift Error',
+        lines: [
+          ['Status', 'Reading frame shifted by 1 bit (Index out of bounds).'],
+          ['Effect', 'Temp script translates into complete gibberish, breaking compilation.'],
+          ['Result', '15% Output yield, hardware logic is highly corrupted (Logic Scramble).']
+        ]
+      },
+      {
+        key: 'deletion',
+        label: 'RM -RF Locus',
+        title: 'RM -RF Locus',
+        lines: [
+          ['Status', 'Critical Bug - Gene directory completely deleted.'],
+          ['Effect', 'The compiler has zero input data to process (No Source Found).'],
+          ['Result', 'Fatal Crash (Albinism), UI defaults to Safe Mode with no UV proxy.']
+        ]
+      }
+    ];
+
+    const clamp8 = v => Math.max(0, Math.min(255, Math.round(v)));
+    const rgb = (r, g, b) => `rgb(${clamp8(r)},${clamp8(g)},${clamp8(b)})`;
+
+    const Hero = memo(function Hero() {
+      return (
+        <section className="relative min-h-[85vh] w-full flex flex-col justify-center px-8 md:px-20 overflow-hidden">
+          <div className="max-w-[1400px] w-full mx-auto relative z-10 flex flex-col items-start mt-20">
+            <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] text-zinc-100 leading-[1.05] tracking-tight font-semibold max-w-4xl mb-12">
+              Melanin Project by Joao and Ana
+            </h1>
+
+            <div className="glass-panel p-8 max-w-2xl">
+              <h2 className="text-zinc-200 text-sm font-medium tracking-wide mb-4">README.md: </h2>
+              <div className="text-zinc-400 font-normal leading-relaxed text-sm space-y-4">
+                <p>Using a DNA template, RNA polymerase "builds" a strand of messenger RNA which corresponds to the original information, thus allowing the original information to be used, without damaging the integrity of the original DNA.</p>
+                <p>The ribosome decodes the mRNA sequence.</p>
+                <p>The t-RNA molecules then bring amino acids to the ribosome that are linked together to form a protein chain that determines a particular trait.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    });
+
+    const TranscriptionEngine = memo(function TranscriptionEngine() {
+      return (
+        <div className="col-span-12 glass-panel p-10 flex flex-col gap-10 relative overflow-hidden">
+          <div className="flex justify-between items-center border-b border-zinc-800/50 pb-6">
+            <h3 className="text-zinc-200 text-lg font-medium tracking-tight">Copy-Paste Simulation (Transcription)</h3>
+          </div>
+
+          <div className="relative py-12 px-2 md:px-8 flex flex-col gap-14 text-sm font-medium tracking-widest text-zinc-400">
+            <div className="flex items-center gap-3 relative z-10 bg-zinc-900/30 border border-zinc-800/30 p-5 rounded-lg shadow-sm">
+              <span className="text-zinc-600 text-xs w-6">5'</span>
+              <div className="flex-1 flex justify-between relative px-1 text-zinc-200">
+                {DNA_TEMPLATE.map((b, i) => (
+                  <span
+                    key={i}
+                    className="mrna-b text-xl w-4 text-center"
+                    style={{ animationDelay: `${(i / DNA_TEMPLATE.length) * 8}s` }}
+                  >
+                    {COMPLEMENT[b] || ''}
+                  </span>
+                ))}
+              </div>
+              <span className="text-zinc-600 text-xs w-6">3'</span>
+            </div>
+
+            <div className="flex items-center gap-3 bg-zinc-900/60 p-5 rounded-lg shadow-inner">
+              <span className="text-zinc-600 text-xs w-6">3'</span>
+              <div className="flex-1 flex justify-between px-1">
+                {DNA_TEMPLATE.map((b, i) => (
+                  <span key={i} className="w-4 text-center text-xl font-normal opacity-50">{b}</span>
+                ))}
+              </div>
+              <span className="text-zinc-600 text-xs w-6">5'</span>
+            </div>
+          </div>
+        </div>
+      );
+    });
+
+    const CharacterRender = memo(function CharacterRender({ skin, hair, eye }) {
+      return (
+        <div className="relative w-full h-full flex flex-col items-center justify-center p-8">
+          <svg width="160" height="240" viewBox="0 0 160 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="20" width="120" height="200" rx="60" fill={skin} className="transition-colors duration-500 stroke-zinc-800/80 stroke-1" />
+            <path d="M20 80C20 46.8629 46.8629 20 80 20C113.137 20 140 46.8629 140 80V100H20V80Z" fill={hair} className="transition-colors duration-500" />
+            <ellipse cx="60" cy="130" rx="6" ry="4" fill={eye} className="transition-colors duration-500" />
+            <ellipse cx="100" cy="130" rx="6" ry="4" fill={eye} className="transition-colors duration-500" />
+          </svg>
+        </div>
+      );
+    });
+
+    const SectionHead = memo(function SectionHead({ no, title }) {
+      return (
+        <div className="flex items-center gap-4 mb-20 data-scrub">
+          <h2 className="text-2xl md:text-3xl text-zinc-100 tracking-tight font-semibold flex items-baseline gap-4">
+            <span className="text-zinc-500 text-base font-normal">{no}.</span>
+            {title}
+          </h2>
+        </div>
+      );
+    });
+
+    // Gene segments for MC1R - exons are coding, introns are non-coding (removed during splicing)
+    const GENE_SEGMENTS = [
+      { type: 'exon',   id: 'e1', label: 'EXON 1', bases: ['A','U','G','G','C','U','G','A','C','U','C','C'] },
+      { type: 'intron', id: 'i1', label: 'INTRON 1', bases: ['g','u','a','a','g','u','·','·','·','c','a','g'] },
+      { type: 'exon',   id: 'e2', label: 'EXON 2', bases: ['G','A','G','U','A','C','A','G','C','C','U','G'] },
+      { type: 'intron', id: 'i2', label: 'INTRON 2', bases: ['g','u','a','a','g','u','·','·','·','c','a','g'] },
+      { type: 'exon',   id: 'e3', label: 'EXON 3', bases: ['A','A','G','U','G','G','U','A','A'] },
+    ];
+    const CODONS_DATA = [
+      { codon: 'AUG', aa: 'Met', color: '#22d3ee' },
+      { codon: 'GCU', aa: 'Ala', color: '#60a5fa' },
+      { codon: 'GAC', aa: 'Asp', color: '#a78bfa' },
+      { codon: 'UCC', aa: 'Ser', color: '#34d399' },
+      { codon: 'GAG', aa: 'Glu', color: '#f472b6' },
+      { codon: 'UAC', aa: 'Tyr', color: '#fbbf24' },
+      { codon: 'AGC', aa: 'Ser', color: '#34d399' },
+      { codon: 'CUG', aa: 'Leu', color: '#fb923c' },
+      { codon: 'AAG', aa: 'Lys', color: '#c084fc' },
+      { codon: 'UGG', aa: 'Trp', color: '#2dd4bf' },
+      { codon: 'UAA', aa: 'STOP', color: '#ef4444' },
+    ];
+    // Compute mutation effects on gene data
+    function getMutatedData(lab) {
+      let codons = CODONS_DATA.map(c => ({ ...c }));
+      let mutLabel = null;
+      let proteinStatus = 'FUNCTIONAL';
+      let proteinColor = 'text-zinc-200';
+
+      if (lab.deletion) {
+        codons = [];
+        mutLabel = 'GENE DELETED — NO SEQUENCE';
+        proteinStatus = 'NO OUTPUT';
+        proteinColor = 'text-red-400';
+      } else if (lab.frameshift) {
+        // Shift reading frame: bases shift, producing garbage amino acids
+        codons = [
+          { codon: 'AUG', aa: 'Met', color: '#22d3ee' },
+          { codon: 'GCU', aa: 'Ala', color: '#60a5fa' },
+          { codon: 'GAC', aa: 'Asp', color: '#a78bfa' },
+          { codon: 'UCC', aa: 'Ser', color: '#34d399' },
+          { codon: 'CGA', aa: '???', color: '#71717a' },
+          { codon: 'GUA', aa: '???', color: '#71717a' },
+          { codon: 'CAG', aa: '???', color: '#71717a' },
+          { codon: 'CCU', aa: '???', color: '#71717a' },
+          { codon: 'GAA', aa: '???', color: '#71717a' },
+          { codon: 'GUG', aa: '???', color: '#71717a' },
+          { codon: 'GUA', aa: '???', color: '#71717a' },
+        ];
+        mutLabel = 'FRAMESHIFT — READING FRAME CORRUPTED';
+        proteinStatus = 'MISFOLDED';
+        proteinColor = 'text-orange-400';
+      } else if (lab.nonsense) {
+        // Early stop: truncate at position 5
+        codons = codons.slice(0, 4);
+        codons.push({ codon: 'UAA', aa: 'STOP', color: '#ef4444' });
+        mutLabel = 'PREMATURE STOP — TRUNCATED PROTEIN';
+        proteinStatus = 'TRUNCATED';
+        proteinColor = 'text-yellow-400';
+      } else if (lab.missense) {
+        // R151C: swap one amino acid (Arg→Cys at a position)
+        codons = codons.map((c, i) => i === 4 ? { codon: 'UGC', aa: 'Cys', color: '#f87171' } : c);
+        mutLabel = 'R151C MISSENSE — SINGLE RESIDUE SWAP';
+        proteinStatus = 'PARTIAL FUNCTION';
+        proteinColor = 'text-amber-400';
+      }
+
+      return { codons, mutLabel, proteinStatus, proteinColor };
+    }
+
+    const BlueprintSection = memo(function BlueprintSection({ lab }) {
+      const sectionRef = useRef(null);
+      const stageRef = useRef(null);
+      const tlRef = useRef(null);
+      const [phase, setPhase] = useState('idle');
+      const [statusText, setStatusText] = useState('AWAITING BUILD COMMAND');
+      const mutData = useMemo(() => getMutatedData(lab), [lab]);
+
+      const startBuild = useCallback(() => {
+        if (phase !== 'idle') return;
+        setPhase('building');
+        setStatusText('INITIALIZING BUILD SEQUENCE...');
+
+        const stage = stageRef.current;
+        if (!stage) return;
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setPhase('done');
+            setStatusText('BUILD COMPLETE — MC1R PROTEIN ASSEMBLED');
+          }
+        });
+        tlRef.current = tl;
+
+        const elements = {
+          drones: stage.querySelectorAll('.build-drone'),
+          introns: stage.querySelectorAll('.intron-seg'),
+          geneRow: stage.querySelector('.gene-row'),
+          spliceLabel: stage.querySelector('.splice-label'),
+          codonRow: stage.querySelector('.codon-row'),
+          codonBlocks: stage.querySelectorAll('.codon-block'),
+          aaRow: stage.querySelector('.aa-row'),
+          aaBlocks: stage.querySelectorAll('.aa-block'),
+          droneCarriers: stage.querySelectorAll('.drone-carrier'),
+          proteinRow: stage.querySelector('.protein-row'),
+          foldedProtein: stage.querySelector('.folded-protein'),
+          bondLines: stage.querySelectorAll('.bond-line')
+        };
+
+        // SEQUENCE 01: Deploy & Scan
+        tl.set(elements.drones, { opacity: 0, x: -60, y: 0 })
+          .to(elements.drones, { opacity: 1, duration: 0.4, stagger: 0.15 })
+          .add(() => setStatusText('DRONES DEPLOYED — SCANNING GENE...'))
+          .to(elements.drones, {
+            x: () => elements.geneRow ? elements.geneRow.scrollWidth + 40 : 800,
+            duration: 2.5,
+            ease: 'power1.inOut',
+            stagger: 0.3
+          });
+
+        // SEQUENCE 02: Splicing (Remove Introns)
+        tl.add(() => setStatusText('SPLICING — REMOVING NON-CODING INTRONS...'))
+          .to(elements.spliceLabel, { opacity: 1, duration: 0.3 })
+          .to(elements.introns, {
+            opacity: 0, scaleY: 0.3, duration: 0.6, stagger: 0.2
+          })
+          .to(elements.introns, {
+            width: 0, padding: 0, margin: 0, duration: 0.5, ease: 'power3.inOut'
+          })
+          .to(elements.spliceLabel, { opacity: 0, duration: 0.2 });
+
+        // SEQUENCE 03: Translation (tRNA Delivery)
+        tl.add(() => setStatusText('mRNA PROCESSED — TRANSLATING...'))
+          .to(elements.codonRow, { opacity: 1, height: 'auto', duration: 0.4 })
+          .fromTo(elements.codonBlocks, { opacity: 0, y: 10, scale: 0.8 }, {
+            opacity: 1, y: 0, scale: 1, stagger: 0.06, duration: 0.3, ease: 'back.out(1.5)'
+          })
+          .to(elements.aaRow, { opacity: 1, height: 'auto', duration: 0.4 }, '+=0.2');
+
+        elements.droneCarriers.forEach((dc, i) => {
+          const aa = elements.aaBlocks[i];
+          if (!aa) return;
+          tl.fromTo(dc, { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.3 }, '-=0.15')
+            .to(aa, { opacity: 1, scale: 1, duration: 0.2 })
+            .to(dc, { opacity: 0, y: -20, duration: 0.2 });
+        });
+
+        // SEQUENCE 04: Final Folding
+        tl.add(() => setStatusText('POLYPEPTIDE FOLDING...'))
+          .to(elements.bondLines, { opacity: 1, scaleX: 1, stagger: 0.05 })
+          .to(elements.aaRow, { opacity: 0, height: 0, duration: 0.5 }, '+=0.3')
+          .to(elements.proteinRow, { opacity: 1, height: 'auto', duration: 0.4 })
+          .fromTo(elements.foldedProtein, { scale: 0 }, { scale: 1, duration: 1, ease: 'elastic.out(1, 0.5)' });
+
+      }, [phase]);
+
+      // Reset animation when mutation changes
+      useEffect(() => {
+        if (tlRef.current) { tlRef.current.kill(); tlRef.current = null; }
+        setPhase('idle');
+        setStatusText('AWAITING BUILD COMMAND');
+      }, [lab.missense, lab.nonsense, lab.frameshift, lab.deletion]);
+
+      useLayoutEffect(() => {
+        return () => { if (tlRef.current) tlRef.current.kill(); };
+      }, []);
+
+      return (
+        <section ref={sectionRef} className="bp-section py-24 md:py-32 px-8 md:px-20 overflow-hidden">
+          <div className="max-w-[1400px] mx-auto w-full relative z-10">
+            <SectionHead no="02" title="Protein Assembly" />
+
+            <div className="bento-layer grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+              {/* Main build panel */}
+              <div className="lg:col-span-12 glass-panel p-10 relative overflow-hidden">
+                <div className="flex justify-between items-center border-b border-zinc-800/50 pb-6 mb-8">
+                  <h3 className="text-zinc-200 text-lg font-medium tracking-tight">MC1R Gene → Protein Build</h3>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${phase === 'done' ? 'bg-emerald-400' : phase === 'building' ? 'bg-blue-400 animate-pulse' : 'bg-zinc-600'}`} />
+                    <span className="text-[11px] text-zinc-500 font-medium tracking-wide uppercase">{statusText}</span>
+                  </div>
+                </div>
+
+                <div ref={stageRef}>
+
+                  {/* Drones */}
+                  <div className="relative h-8 mb-3 overflow-visible">
+                    {[0, 1, 2].map(i => (
+                      <svg key={i} className="build-drone absolute top-0" style={{ left: 0, opacity: 0 }} width="22" height="18" viewBox="0 0 22 18">
+                        <rect x="4" y="7" width="14" height="6" rx="2" fill="rgba(161,161,170,0.5)" />
+                        <line x1="2" y1="7" x2="8" y2="3" stroke="rgba(161,161,170,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+                        <line x1="14" y1="3" x2="20" y2="7" stroke="rgba(161,161,170,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+                        <circle cx="2" cy="7" r="1.5" fill="rgba(161,161,170,0.3)" />
+                        <circle cx="20" cy="7" r="1.5" fill="rgba(161,161,170,0.3)" />
+                      </svg>
+                    ))}
+                  </div>
+
+                  {/* Mutation indicator */}
+                  {mutData.mutLabel && (
+                    <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/5 border border-red-500/15 flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-red-400" />
+                      <span className="text-[11px] text-red-400/70 font-medium tracking-wide uppercase">{mutData.mutLabel}</span>
+                    </div>
+                  )}
+
+                  {/* Gene sequence */}
+                  {!lab.deletion && (
+                    <div className="gene-row flex flex-wrap gap-2 mb-10 relative">
+                      {GENE_SEGMENTS.map((seg) => (
+                        <div key={seg.id}
+                          className={`flex flex-col gap-2 px-3 py-3 rounded-xl transition-all ${seg.type === 'intron' ? 'intron-seg bg-red-500/5 border border-red-500/10' : 'bg-zinc-900/40 border border-zinc-800/50'}`}>
+                          <span className={`text-[9px] font-semibold uppercase tracking-widest ${seg.type === 'intron' ? 'text-red-400/40' : 'text-zinc-500'}`}>
+                            {seg.label}
+                          </span>
+                          <div className="flex gap-[3px]">
+                            {seg.bases.map((b, bi) => (
+                              <span key={bi} className={`text-xs font-mono w-4 text-center font-medium ${seg.type === 'intron' ? 'text-red-300/25' : 'text-zinc-300'}`}>
+                                {b}
+                              </span>
+                            ))}
+                          </div>
+                          {seg.type === 'intron' && (
+                            <span className="text-[8px] text-red-500/25 tracking-wide">non-coding</span>
+                          )}
+                        </div>
+                      ))}
+                      <div className="splice-label absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none z-10">
+                        <span className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full font-medium tracking-widest">
+                          SPLICING INTRONS
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Deletion: empty state */}
+                  {lab.deletion && (
+                    <div className="flex flex-col items-center justify-center py-16 mb-10">
+                      <span className="text-red-400/30 text-6xl font-light mb-4">∅</span>
+                      <span className="text-[11px] text-red-400/50 tracking-widest uppercase">Gene Locus Deleted — No Source Data</span>
+                    </div>
+                  )}
+
+                  {/* Codons */}
+                  <div className="codon-row flex flex-wrap gap-2 items-center justify-center mb-8" style={{ opacity: 0, height: 0, overflow: 'hidden' }}>
+                    <div className="w-full mb-4 text-zinc-500 text-xs font-semibold uppercase tracking-widest border-b border-zinc-800 pb-4 text-center">Codon Readout</div>
+                    {mutData.codons.map((c, i) => (
+                      <div key={i} className="codon-block flex flex-col items-center px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/50" style={{ opacity: 0 }}>
+                        <span className="text-[11px] font-mono font-medium tracking-wider" style={{ color: c.color }}>{c.codon}</span>
+                        <span className="text-[8px] text-zinc-500 mt-0.5">{c.aa}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Amino acid assembly */}
+                  <div className="aa-row flex flex-wrap items-center justify-center mb-8" style={{ opacity: 0, height: 0, overflow: 'hidden' }}>
+                    <div className="w-full mb-4 text-zinc-500 text-xs font-semibold uppercase tracking-widest border-b border-zinc-800 pb-4 text-center">Ribosome Assembly</div>
+                    <div className="flex items-center justify-center flex-wrap gap-0">
+                      {mutData.codons.map((c, i) => (
+                        <React.Fragment key={i}>
+                          <div className="drone-carrier" style={{ position: 'relative', opacity: 0 }}>
+                            <svg width="14" height="10" viewBox="0 0 14 10" style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)' }}>
+                              <rect x="2" y="3" width="10" height="5" rx="1.5" fill="rgba(161,161,170,0.3)" />
+                              <line x1="1" y1="3" x2="5" y2="1" stroke="rgba(161,161,170,0.25)" strokeWidth="1" />
+                              <line x1="9" y1="1" x2="13" y2="3" stroke="rgba(161,161,170,0.25)" strokeWidth="1" />
+                            </svg>
+                          </div>
+                          <div className="aa-block px-2 py-2 rounded-lg border border-zinc-800/50 bg-zinc-900/30 text-[10px] font-bold font-mono"
+                            style={{ opacity: 0, scale: 0.5, color: c.color }}>
+                            {c.aa}
+                          </div>
+                          {i < mutData.codons.length - 1 && c.aa !== 'STOP' && mutData.codons[i + 1].aa !== 'STOP' && (
+                            <div className="bond-line w-3 h-[2px] bg-zinc-600 rounded-full" style={{ opacity: 0, scaleX: 0, transformOrigin: 'left' }} />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Folded protein */}
+                  <div className="protein-row flex flex-col items-center" style={{ opacity: 0, height: 0, overflow: 'hidden' }}>
+                    <div className={`folded-protein glass-panel w-52 h-52 rounded-full flex flex-col items-center justify-center gap-2 ${mutData.proteinStatus === 'NO OUTPUT' ? 'border-red-500/20' : mutData.proteinStatus !== 'FUNCTIONAL' ? 'border-yellow-500/20' : ''}`}>
+                      <span className={`text-sm font-medium tracking-tight ${mutData.proteinColor}`}>MC1R</span>
+                      <span className={`text-[10px] tracking-widest uppercase ${mutData.proteinStatus === 'FUNCTIONAL' ? 'text-zinc-500' : mutData.proteinStatus === 'NO OUTPUT' ? 'text-red-400/60' : 'text-amber-400/60'}`}>
+                        {mutData.proteinStatus}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Build button */}
+                {phase === 'idle' && (
+                  <div className="flex justify-center mt-10">
+                    <button onClick={startBuild}
+                      className="px-8 py-3 rounded-xl bg-zinc-900/30 border border-zinc-800 hover:bg-zinc-800/40 text-zinc-400 hover:text-zinc-200 text-xs font-medium tracking-widest uppercase transition-colors duration-200 active:scale-95">
+                      Build Protein
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Central Dogma panel */}
+              <div className="lg:col-span-12 glass-panel p-10">
+                <div className="mb-6 text-zinc-500 text-xs font-semibold uppercase tracking-widest border-b border-zinc-800/50 pb-4">Genes to Protein</div>
+                <p className="text-sm leading-relaxed text-zinc-400 font-light max-w-3xl">
+                  {CENTRAL_DOGMA}
+                </p>
+                <div className="mt-8 pt-4 border-t border-zinc-800/30">
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      );
+    });
+
+    const DiagnosticCard = memo(function DiagnosticCard({ title, lines }) {
+      return (
+        <div className="mt-8 p-6 bg-red-500/5 border border-red-500/20 rounded-xl relative overflow-hidden fade-in-up">
+          <h4 className="text-red-400 text-xs font-semibold uppercase tracking-widest mb-4">Diagnostic Log - {title}:</h4>
+          <ul className="text-sm text-zinc-400 space-y-3 relative z-10">
+            {lines.map(([k, v], i) => (
+              <li key={i}><strong className="text-zinc-300 font-medium">{k}:</strong> {v}</li>
+            ))}
+          </ul>
+        </div>
+      );
+    });
+
+    function computeResults(lab) {
+      const { rnapActivity, ribosomeConc, trnaAvail, missense, nonsense, frameshift, deletion } = lab;
+      let ml = (rnapActivity / 100) * (ribosomeConc / 100) * (trnaAvail / 100) * 100;
+      let type = 'Client Render (Eumelanin)';
+      let log = '';
+      let fault = null;
+
+      if (deletion) {
+        ml = 0; type = 'Fatal Crash (Albinism)';
+        log = 'Critical Bug: Directory deleted (RM -RF). The compiler has no input. The UI defaults to Safe Mode. Maximum vulnerability to UV damage.';
+        fault = '404: Locus Not Found';
+      } else if (nonsense) {
+        ml *= 0.1; type = 'Truncated Build';
+        log = 'Fatal Exception: STOP command hit too early. The compiled hardware is fragmented and the garbage collector cleared it. 10% Output yielding severely weak UI.';
+        fault = 'Unexpected EOF';
+      } else if (frameshift) {
+        ml *= 0.15; type = 'Logic Scramble';
+        log = 'Index out of bounds error. The reading frame shifted by 1 bit, turning the entire temp script into gibberish. Hardware output is heavily bottlenecked.';
+        fault = 'Index Shift Error';
+      } else if (missense) {
+        ml *= 0.6; type = 'Fair Skin Render';
+        log = "Bug R151C detected: Typo in the source code. The hardware compiled wrong and the UV protection crashed. System now runs 'Red Hair / Fair Skin' Mode by default.";
+        fault = 'Logic Error (R151C)';
+      } else if (ml > 70) {
+        log = 'All systems nominal. Master branch deployed successfully. Compiler running at 100%. Generates maximum eumelanin for heavy passive UV armor.';
+      } else if (ml > 30) {
+        log = 'System nominal. Slight bottleneck in the compiler threads, but no bugs found. UI renders default eumelanin levels.';
+      } else {
+        log = 'Extreme lag detected. Low CPU or RAM inputs are bottlenecking the compiler. Hardware output is severely reduced.';
+      }
+
+      const n = ml / 100;
+      let skin, hair, eye;
+      if (type.includes('Crash')) {
+        skin = rgb(250, 235, 225); hair = rgb(240, 230, 220); eye = rgb(180, 180, 200);
+      } else if (type.includes('Fair Skin')) {
+        skin = rgb(255 - n * 40, 210 - n * 30, 180 - n * 40);
+        hair = rgb(180, 60, 30);
+        eye  = rgb(110, 140, 70);
+      } else {
+        skin = rgb(255 - n * 140, 220 - n * 130, 195 - n * 130);
+        hair = rgb(60 - n * 50, 45 - n * 40, 35 - n * 30);
+        eye  = rgb(100 - n * 80, 75 - n * 60, 55 - n * 40);
+      }
+      return { melaninLevel: ml, type, log, fault, skin, hair, eye };
+    }
+
+    function App() {
+      const root = useRef(null);
+      const [lab, setLab] = useState({
+        rnapActivity: 100, ribosomeConc: 100, trnaAvail: 100,
+        missense: false, nonsense: false, frameshift: false, deletion: false
+      });
+
+      useLayoutEffect(() => {
+        const lenis = new Lenis({ duration: 1.4, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+        lenis.on('scroll', ScrollTrigger.update);
+        const rafCb = t => lenis.raf(t * 1000);
+        gsap.ticker.add(rafCb);
+        gsap.ticker.lagSmoothing(0);
+
+        const ctx = gsap.context(() => {
+          gsap.utils.toArray('.data-scrub').forEach(el => {
+            gsap.fromTo(el, { y: 40, opacity: 0 }, { y: 0, opacity: 1, ease: 'power3.out', duration: 1.2, scrollTrigger: { trigger: el, start: 'top 90%', end: 'top 60%', scrub: 1 } });
+          });
+          gsap.utils.toArray('.bento-layer').forEach(grid => {
+            gsap.fromTo(grid.children, { opacity: 0, y: 20 }, { opacity: 1, y: 0, ease: 'power3.out', stagger: { amount: 0.2 }, scrollTrigger: { trigger: grid, start: 'top 85%', end: 'top 60%', scrub: 1 } });
+          });
+        }, root);
+
+        return () => { ctx.revert(); gsap.ticker.remove(rafCb); lenis.destroy(); };
+      }, []);
+
+      const results = useMemo(() => computeResults(lab), [lab]);
+
+      const setSlider = useCallback((key, val) => {
+        setLab(prev => ({ ...prev, [key]: val }));
+      }, []);
+
+      const toggleMutation = useCallback(key => {
+        setLab(s => ({
+          ...s,
+          missense: false, nonsense: false, frameshift: false, deletion: false,
+          [key]: !s[key]
+        }));
+      }, []);
+
+      const activeMutations = MUTATIONS.filter(m => lab[m.key]);
+
+      return (
+        <div ref={root} className="pb-32">
+          <Hero />
+
+          <section className="py-24 md:py-32 px-8 md:px-20 max-w-[1400px] mx-auto w-full">
+            <SectionHead no="01" title="Synthesis Architecture" />
+            <div className="bento-layer grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+              <TranscriptionEngine />
+
+              <div className="lg:col-span-4 flex flex-col">
+                <div className="glass-panel p-10 flex-1 flex flex-col">
+                  <div className="mb-10 text-zinc-500 text-xs font-semibold uppercase tracking-widest border-b border-zinc-800 pb-4">Variable Efficiency Specs</div>
+                  <div className="space-y-12 flex-1">
+                    {SLIDERS.map(s => (
+                      <div key={s.key} className="space-y-4">
+                        <div className="flex justify-between text-[11px] font-medium tracking-wide text-zinc-400">
+                          <span>{s.label}</span>
+                          <span className="text-zinc-200">{lab[s.key]}%</span>
+                        </div>
+                        <input
+                          type="range" min="0" max="100"
+                          value={lab[s.key]}
+                          onChange={e => setSlider(s.key, +e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-8 flex flex-col">
+                <div className="glass-panel flex flex-col md:flex-row overflow-hidden border border-zinc-800/50">
+                  <div className="flex-1 flex justify-center items-center relative border-b md:border-b-0 md:border-r border-zinc-800/50 bg-zinc-950/20 min-h-[420px]">
+                    <div className="absolute top-8 left-8 text-[11px] text-zinc-500 font-medium tracking-widest uppercase">Client Render</div>
+                    <CharacterRender skin={results.skin} hair={results.hair} eye={results.eye} />
+                  </div>
+
+                  <div className="flex-1 p-10 flex flex-col justify-center bg-zinc-950/50">
+                    <div className="mb-12">
+                      <span className="text-[11px] uppercase text-zinc-500 font-semibold tracking-widest">Aggregate Melanin Production</span>
+                      <div className="flex items-baseline gap-2 mt-4 text-zinc-200">
+                        <span className="text-6xl font-semibold tracking-tighter">{Math.round(results.melaninLevel)}</span>
+                        <span className="text-xl text-zinc-600 font-light">%</span>
+                      </div>
+                      <div className="text-xs text-zinc-400 mt-3">{results.type}</div>
+                    </div>
+
+                    <div className="border-t border-zinc-800/50 pt-8">
+                      <h3 className="uppercase mb-3 text-[10px] font-bold tracking-widest text-zinc-500">Diagnostic Summary</h3>
+                      <p className="text-[13px] leading-relaxed text-zinc-400 font-light">{results.log}</p>
+                    </div>
+
+                    {results.fault && (
+                      <div key={results.fault} className="mt-8 pt-4 border-l pl-4 border-zinc-500 text-xs flex flex-col gap-1 text-zinc-300 font-medium fade-in-up">
+                        <span className="text-zinc-500 uppercase text-[10px] tracking-widest mb-1">Identified Divergence Constraint:</span>
+                        {results.fault}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-1 lg:col-span-12 glass-panel p-10 mt-6">
+                <div className="mb-10 text-zinc-500 text-sm font-medium tracking-widest border-b border-zinc-800/50 pb-6 flex justify-between items-center">
+                  <span>Mutational Testing Vector</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {MUTATIONS.map(m => {
+                    const on = lab[m.key];
+                    return (
+                      <button
+                        key={m.key}
+                        onClick={() => toggleMutation(m.key)}
+                        className={`flex justify-between items-center rounded-xl p-5 transition-colors duration-200 outline-none select-none ${on ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-zinc-900/30 border border-zinc-800 hover:bg-zinc-800/40'}`}
+                      >
+                        <span className={`text-xs font-medium tracking-wide ${on ? 'text-blue-400' : 'text-zinc-400'}`}>{m.label}</span>
+                        <div className={`toggle ${on ? 'on' : ''}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {activeMutations.map(m => (
+                  <DiagnosticCard key={m.key} title={m.title} lines={m.lines} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <BlueprintSection lab={lab} />
+
+          <section className="py-24 px-8 md:px-20 max-w-[1400px] mx-auto w-full mt-12 border-t border-zinc-800/30">
+            <SectionHead no="03" title="Theoretical Lexicon" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16 bento-layer">
+              {GLOSSARY.map((item, i) => (
+                <div key={item.term} className="flex flex-col">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[10px] text-zinc-600 font-mono tracking-widest">{(i + 1).toString().padStart(2, '0')}</span>
+                    <h4 className="text-zinc-200 font-medium tracking-tight text-lg">{item.term}</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-zinc-400 font-light break-words">{item.def}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+
+</html>
