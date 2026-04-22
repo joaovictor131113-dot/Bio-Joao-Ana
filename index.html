@@ -129,7 +129,7 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo, memo } = React;
 
-    const CENTRAL_DOGMA = `Protein production starts with transcription, in which RNA polymerase uses a DNA template to construct a complimentary pre-mRNA strand. Before the mature mRNA is transferred to the cytoplasm, it has to add a cap and tail and remove non-coding introns. Finally, there is translation by ribosomes reading the codons carried by mRNA and enabling tRNA to supply amino acids whose polypeptide chain is lengthened until a stop codon is detected.\nThis final assembly requires folding the finished protein into secondary structures, namely alpha-helices and beta sheets, forming functional tertiary structures for proper receptors such as MC1R.`;
+    const CENTRAL_DOGMA = `Transcription is the first step of protein synthesis. To do this, RNA polymerase uses a DNA template to produce a pre-mRNA strand identical to the DNA strand. This is the stage where the genetic code is initially written down, using the A → U and C → G pairing rules. In the regulation process, a cap and a tail are added to the mRNA, and introns, which are anything that does not code anything, are removed before the mRNA fully matures before heading for the cytoplasm. Finally, Translation takes place where ribosomes, which read the codons on mRNA, thus enabling tRNA molecules to bring amino acids. It elongates until there is a stop codon.\nFor this assembly, the protein has to be folded into secondary structures such as alpha-helices and beta-sheets and functional tertiary structures such as MC1R receptor. The importance of this receptor is that it initiates the process of production of melanin. The body uses this pigment to protect any DNA within any skin cells from UV rays. It is also responsible for pigmentation of hair and skin.`;
 
     const GLOSSARY = [
       { term: "Base", def: "The 4 raw bit inputs (A, T, C, G) composing your source code." },
@@ -209,15 +209,15 @@
         <section className="relative min-h-[85vh] w-full flex flex-col justify-center px-8 md:px-20 overflow-hidden">
           <div className="max-w-[1400px] w-full mx-auto relative z-10 flex flex-col items-start mt-20">
             <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] text-zinc-100 leading-[1.05] tracking-tight font-semibold max-w-4xl mb-12">
-              Melanin Project by Joao and Ana
+              MCR1 & Melanin Project
             </h1>
 
             <div className="glass-panel p-8 max-w-2xl">
               <h2 className="text-zinc-200 text-sm font-medium tracking-wide mb-4">README.md: </h2>
               <div className="text-zinc-400 font-normal leading-relaxed text-sm space-y-4">
-                <p>Using a DNA template, RNA polymerase "builds" a strand of messenger RNA which corresponds to the original information, thus allowing the original information to be used, without damaging the integrity of the original DNA.</p>
-                <p>The ribosome decodes the mRNA sequence.</p>
-                <p>The t-RNA molecules then bring amino acids to the ribosome that are linked together to form a protein chain that determines a particular trait.</p>
+                <p>RNA polymerase "builds" a strand of messenger RNA (mRNA) with corresponding original information using a DNA template. The base adenine (A) bonds with uracil (U), and cytosine (C) bonds with guanine (G). This is the base pairing rule that must be followed. There is a chance to use genetic information without any damage to the original DNA.</p>
+                <p>After that, the ribosome reads the sequence of the messenger RNA.</p>
+                <p>Finally, tRNA molecules bring amino acids to the ribosome, where they are connected to form a chain of proteins. It can affect a few factors, including the production of melanin, a natural pigment that is responsible for protecting the skin against harmful UV rays and also giving the body its color.</p>
               </div>
             </div>
           </div>
